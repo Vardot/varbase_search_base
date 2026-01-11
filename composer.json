@@ -1,0 +1,25 @@
+{
+  "name": "drupal/varbase_search_base",
+  "description": "A recipe to manage default installed modules, configs and permissions for Varbase search functionality using Search API.",
+  "keywords": ["recipe", "Varbase recipes", "varbase recipe", "Drupal recipes", "drupal recipe", "Search", "Search API", "Database Search"],
+  "type": "drupal-recipe",
+  "notification-url": "https://packages.drupal.org/8/downloads",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Vardot",
+      "homepage": "https://www.drupal.org/vardot",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/varbase_search_base",
+    "source": "http://cgit.drupalcode.org/varbase_search_base"
+  },
+  "require": {
+    "drupal/core": "~11.3.0",
+    "drupal/search_api": "~1",
+    "drupal/ultimate_cron": "~2"
+  },
+  "version": "1.0.x-dev"
+}
