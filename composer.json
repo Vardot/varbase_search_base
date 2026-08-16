@@ -17,7 +17,7 @@
     "source": "http://cgit.drupalcode.org/varbase_search_base"
   },
   "require": {
-    "drupal/core": "~11.3.0",
+    "drupal/core": "~11.4.0",
     "drupal/search_api": "~1",
     "drupal/ultimate_cron": "~2"
   },

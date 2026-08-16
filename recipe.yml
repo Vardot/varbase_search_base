@@ -10,9 +10,6 @@ config:
     search: '*'
     search_api: '*'
     search_api_db: '*'
-    varbase_search_base:
-      - search_api.server.database_server
-      - ultimate_cron.job.search_api_cron
   actions:
     user.role.anonymous:
       grantPermissions:
