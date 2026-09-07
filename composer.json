@@ -18,8 +18,7 @@
   },
   "require": {
     "drupal/core": "~11.4.0",
-    "drupal/search_api": "~1",
-    "drupal/ultimate_cron": "~2"
+    "drupal/search_api": "~1"
   },
   "version": "1.0.x-dev"
 }

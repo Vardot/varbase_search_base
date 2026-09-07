@@ -6,7 +6,6 @@ This recipe provides a complete search setup including:
 - Core Drupal search functionality
 - Search API for advanced search capabilities
 - Database-based search server configuration
-- Cron job management for search indexing
 
 ## Features
 
@@ -19,10 +18,6 @@ This recipe provides a complete search setup including:
 - Minimum 3 characters for search
 - Partial matching enabled for better search results
 - Autocomplete support with suffix and word suggestions
-
-### Cron Management
-- **Ultimate Cron**: Configurable cron job for search indexing
-- Pre-configured search API cron handler
 
 ## Permissions
 
