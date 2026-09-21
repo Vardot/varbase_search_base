@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-09-21
+### Added
+- Ship the search results Canvas page at `/search`, the Content Type facet, the
+  Date Published grouped exposed filter, the Search result view mode, and the
+  automated functional testing suite
+  ([#3624824](https://www.drupal.org/i/3624824)).
+- Depend on `drupal_cms_search`, which owns the search view and the content
+  index this recipe acts on, plus `facets` and `better_exposed_filters`
+  ([#3624824](https://www.drupal.org/i/3624824)).
+
 ## [1.0.0] - 2026-09-08
 ### Added
 - First release of the Varbase Search Base recipe.
@@ -16,5 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporarily remove Ultimate Cron until it has a stable release
   ([#3621494](https://www.drupal.org/i/3621494)).
 
-[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.0...1.0.x
+[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.1...1.0.x
+[1.0.1]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.0...1.0.1
 [1.0.0]: https://git.drupalcode.org/project/varbase_search_base/-/commits/1.0.0
