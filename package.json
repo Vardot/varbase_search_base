@@ -1,0 +1,25 @@
+{
+  "name": "varbase_search_base",
+  "description": "varbase-e2e (Playwright + Cucumber-js) functional test suite for the Varbase Search Base recipe.",
+  "license": "GPL-2.0-or-later",
+  "private": true,
+  "engines": {
+    "node": ">= 22.0"
+  },
+  "scripts": {
+    "test": "node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:chromium": "BROWSER=chromium node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:firefox": "BROWSER=firefox node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:webkit": "BROWSER=webkit node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:headed": "HEADLESS=false node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "test:fast": "SLOW_MO=0 node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",
+    "generate-reports": "node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js"
+  },
+  "devDependencies": {
+    "@vardot/varbase-e2e": "^2.0.4",
+    "@cucumber/pretty-formatter": "^1.0.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

@@ -1,15 +1,22 @@
 name: Varbase Search Base
 description: A recipe to manage default installed modules, configs and permissions for Varbase search functionality using Search API.
 type: Varbase Search
+recipes:
+  - drupal_cms_search
 install:
   - search
   - search_api
   - search_api_db
+  - facets
+  - better_exposed_filters
 config:
+  strict: false
   import:
     search: '*'
     search_api: '*'
     search_api_db: '*'
+    facets: '*'
+    better_exposed_filters: '*'
   actions:
     user.role.anonymous:
       grantPermissions:
@@ -17,3 +24,302 @@ config:
     user.role.authenticated:
       grantPermissions:
         - 'search content'
+    # The search results page is a Drupal Canvas page (see content/canvas_page),
+    # so this view supplies blocks rather than a page:
+    #  - results_block  the results listing, plus the keyword form above them
+    #  - date_block     the Date Published group in the filter rail
+    # A site template overrides the wording, the row view modes and adds its own
+    # displays on top of these.
+    views.view.search:
+      simpleConfigUpdate:
+        display.default.display_options.filters.search_api_datasource:
+          id: search_api_datasource
+          table: search_api_index_content
+          field: search_api_datasource
+          plugin_id: search_api_options
+          operator: or
+          value:
+            'entity:node': 'entity:node'
+          group: 1
+          exposed: false
+        display.default.display_options.filters.created:
+          id: created
+          table: search_api_index_content
+          field: created
+          relationship: none
+          group_type: group
+          admin_label: ''
+          plugin_id: search_api_date
+          operator: '>='
+          value:
+            min: ''
+            max: ''
+            value: ''
+            type: offset
+          group: 1
+          exposed: true
+          expose:
+            operator_id: created_op
+            label: 'Date Published'
+            description: ''
+            use_operator: false
+            operator: created_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: published
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+          is_grouped: true
+          group_info:
+            label: 'Date Published'
+            description: ''
+            identifier: published
+            optional: true
+            widget: radios
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items:
+              1:
+                title: 'Past 24 Hours'
+                operator: '>='
+                value:
+                  min: ''
+                  max: ''
+                  value: '-24 hours'
+                  type: offset
+              2:
+                title: 'Past Week'
+                operator: '>='
+                value:
+                  min: ''
+                  max: ''
+                  value: '-1 week'
+                  type: offset
+              3:
+                title: 'Past Month'
+                operator: '>='
+                value:
+                  min: ''
+                  max: ''
+                  value: '-1 month'
+                  type: offset
+              4:
+                title: 'Past Year'
+                operator: '>='
+                value:
+                  min: ''
+                  max: ''
+                  value: '-1 year'
+                  type: offset
+        display.results_block:
+          id: results_block
+          display_title: 'Search results'
+          display_plugin: block
+          position: 3
+          display_options:
+            pager:
+              type: full
+              options:
+                offset: 0
+                pagination_heading_level: h4
+                items_per_page: 10
+                id: 0
+                tags:
+                  next: ›
+                  previous: ‹
+                  first: '« First'
+                  last: 'Last »'
+                quantity: 9
+            row:
+              type: search_api
+              options:
+                view_modes:
+                  'entity:canvas_page':
+                    canvas_page: default
+            defaults:
+              pager: false
+              row: false
+              exposed_block: false
+            display_description: 'The results listing, placed on the Canvas search page beside the facet rail.'
+            exposed_block: true
+            display_extenders: {  }
+            block_description: 'Search results'
+          cache_metadata:
+            max-age: -1
+            contexts:
+              - 'languages:language_content'
+              - 'languages:language_interface'
+              - url
+              - url.query_args
+              - 'user.node_grants:view'
+              - user.permissions
+            tags:
+              - 'config:search_api.index.content'
+              - 'search_api_list:content'
+        display.date_block:
+          id: date_block
+          display_title: 'Date filter block'
+          display_plugin: block
+          position: 4
+          display_options:
+            exposed_form:
+              type: bef
+              options:
+                submit_button: Apply
+                reset_button: false
+                reset_button_label: Reset
+                exposed_sorts_label: 'Sort by'
+                expose_sort_order: false
+                sort_asc_label: Asc
+                sort_desc_label: Desc
+                text_input_required: ''
+                text_input_required_format: content_format
+                bef:
+                  general:
+                    autosubmit: true
+                    autosubmit_textfield_delay: 500
+                    autosubmit_hide: true
+                    autosubmit_exposed_input: false
+            defaults:
+              exposed_form: false
+            display_description: 'Date Published filter for the search results rail.'
+            exposed_block: true
+            display_extenders: {  }
+          cache_metadata:
+            max-age: -1
+            contexts:
+              - 'languages:language_content'
+              - 'languages:language_interface'
+              - url
+              - url.query_args
+              - 'user.node_grants:view'
+              - user.permissions
+            tags:
+              - 'config:search_api.index.content'
+              - 'search_api_list:content'
+    search_api.index.content:
+      simpleConfigUpdate:
+        # Content Type facets read the node bundle and the Date Published filter
+        # reads the authored date, so both have to be in the index.
+        field_settings.type:
+          label: 'Content type'
+          datasource_id: 'entity:node'
+          property_path: type
+          type: string
+          dependencies:
+            module:
+              - node
+        field_settings.created:
+          label: 'Authored on'
+          datasource_id: 'entity:node'
+          property_path: created
+          type: date
+          dependencies:
+            module:
+              - node
+    canvas.component.block.facet_block.search_content_type:
+      createIfNotExists:
+        status: true
+        dependencies:
+          config:
+          - facets.facet.search_content_type
+          module:
+          - facets
+        active_version: f94cf4db55f86cd3
+        versioned_properties:
+          active:
+            settings:
+              default_settings:
+                id: facet_block:search_content_type
+                label: Content Type
+                label_display: '0'
+                provider: facets
+            fallback_metadata:
+              slot_definitions: null
+        label: Content Type
+        id: block.facet_block.search_content_type
+        provider: facets
+        source: block
+        source_local_id: facet_block:search_content_type
+    canvas.component.block.views_block.search-results_block:
+      createIfNotExists:
+        status: true
+        dependencies:
+          config:
+          - views.view.search
+          module:
+          - views
+        active_version: 460ab2865ba14ecf
+        versioned_properties:
+          active:
+            settings:
+              default_settings:
+                id: views_block:search-results_block
+                label: Search results
+                label_display: '0'
+                provider: views
+                views_label: ''
+                items_per_page: null
+                exposed: []
+            fallback_metadata:
+              slot_definitions: null
+        label: Search results
+        id: block.views_block.search-results_block
+        provider: views
+        source: block
+        source_local_id: views_block:search-results_block
+    canvas.component.block.views_exposed_filter_block.search-date_block:
+      createIfNotExists:
+        status: true
+        dependencies:
+          config:
+          - views.view.search
+          module:
+          - views
+        active_version: ffef810f0d84962c
+        versioned_properties:
+          active:
+            settings:
+              default_settings:
+                id: views_exposed_filter_block:search-date_block
+                label: 'Exposed form: search-date_block'
+                label_display: '0'
+                provider: views
+                views_label: ''
+            fallback_metadata:
+              slot_definitions: null
+        label: 'Exposed form: search-date_block'
+        id: block.views_exposed_filter_block.search-date_block
+        provider: views
+        source: block
+        source_local_id: views_exposed_filter_block:search-date_block
+    canvas.component.block.views_exposed_filter_block.search-results_block:
+      createIfNotExists:
+        status: true
+        dependencies:
+          config:
+          - views.view.search
+          module:
+          - views
+        active_version: cbbcb4c4d4ea96fb
+        versioned_properties:
+          active:
+            settings:
+              default_settings:
+                id: views_exposed_filter_block:search-results_block
+                label: 'Exposed form: search-results_block'
+                label_display: '0'
+                provider: views
+                views_label: ''
+            fallback_metadata:
+              slot_definitions: null
+        label: 'Exposed form: search-results_block'
+        id: block.views_exposed_filter_block.search-results_block
+        provider: views
+        source: block
+        source_local_id: views_exposed_filter_block:search-results_block

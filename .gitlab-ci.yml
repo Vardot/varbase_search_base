@@ -1,0 +1,316 @@
+################################################################################
+# Build + validate + functional test GitLab CI for the Varbase Search Base
+# recipe.
+#
+# validate checks what this repository owns on its own: the composer manifest,
+# the recipe manifest and every configuration file it ships.
+#
+# test assembles a real Varbase site (Varbase Starter + this recipe), seeds the
+# testing users and a deterministic content fixture, indexes it, serves the site
+# with Apache + mod_php and runs the varbase-e2e (Playwright + Cucumber-js)
+# suite in tests/features against it. Modelled on the Varbase Podcasts Base
+# pipeline.
+#
+# The search page this recipe ships is a Drupal Canvas page built from Vartheme
+# BS5 components, so the job installs the theme Varbase Starter installs and no
+# site-template theme: a base recipe's pipeline must not depend on one.
+#
+# The fixture content lives in two content types Varbase Starter provides (Blog
+# post and Utility page) so the Content Type facet has more than one bundle to
+# count, and the search index is filled by `search-api:index` rather than cron.
+################################################################################
+
+stages:
+  - validate
+  - test
+
+variables:
+  DRUPAL_CORE: "11.4.0"
+  COMPOSER_ALLOW_SUPERUSER: "1"
+  COMPOSER_MEMORY_LIMIT: "-1"
+  # git.drupalcode.org clones can be slow from a runner; give composer git
+  # operations room instead of the 300s default so a slow fetch is not a failure.
+  COMPOSER_PROCESS_TIMEOUT: "1800"
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+# The composer manifest has to be installable, and its constraints have to be
+# the ones the recipe actually depends on.
+composer:
+  stage: validate
+  image: composer:2
+  script:
+    - composer validate --no-check-all --no-check-publish
+  rules:
+    - when: always
+
+# Every YAML file the recipe ships has to parse. A recipe that ships a broken
+# config file fails at apply time on someone else's site, which is the worst
+# place to find out. The test fixture recipe is checked too — it is YAML this
+# repository ships.
+yaml:
+  stage: validate
+  image: python:3.12-slim
+  before_script:
+    - pip install --no-cache-dir pyyaml
+  script:
+    - |
+      python - <<'PY'
+      import glob, sys, yaml
+      failed = []
+      files = ['recipe.yml'] + sorted(glob.glob('config/**/*.yml', recursive=True)) \
+          + sorted(glob.glob('tests/**/*.yml', recursive=True))
+      for path in files:
+          try:
+              yaml.safe_load(open(path))
+          except Exception as error:
+              failed.append((path, error))
+      for path, error in failed:
+          print(f'INVALID {path}: {error}')
+      print(f'{len(files)} YAML files checked, {len(failed)} invalid')
+      sys.exit(1 if failed else 0)
+      PY
+  rules:
+    - when: always
+
+# The recipe manifest has to declare the keys a Drupal recipe needs, and every
+# config action has to name a config file this recipe or a dependency provides.
+recipe:
+  stage: validate
+  image: python:3.12-slim
+  before_script:
+    - pip install --no-cache-dir pyyaml
+  script:
+    - |
+      python - <<'PY'
+      import sys, yaml
+      recipe = yaml.safe_load(open('recipe.yml'))
+      problems = []
+      for key in ('name', 'description', 'type'):
+          if not recipe.get(key):
+              problems.append(f'recipe.yml is missing "{key}"')
+      if not isinstance(recipe.get('recipes', []), list):
+          problems.append('recipe.yml "recipes" must be a list')
+      if not isinstance(recipe.get('install', []), list):
+          problems.append('recipe.yml "install" must be a list')
+      for problem in problems:
+          print(problem)
+      print(f'recipe.yml checked, {len(problems)} problems')
+      sys.exit(1 if problems else 0)
+      PY
+  rules:
+    - when: always
+
+# = test = varbase-e2e functional tests against a freshly built Varbase +
+#          Search Base site. One self-contained job (build -> serve -> seed ->
+#          index -> test).
+"🧪 Automated Functional Testing":
+  stage: test
+  # Apache + mod_php (not php:8.4-cli): the PHP built-in server that `drush
+  # runserver` uses truncates large streamed responses (ERR_CONTENT_LENGTH_
+  # MISMATCH), which corrupts the CKEditor 5 bundle and the media-library AJAX.
+  # A real webserver serves them intact.
+  image: php:8.4-apache
+  services:
+    - name: mariadb:11
+      alias: database
+  variables:
+    MYSQL_DATABASE: "drupal"
+    MYSQL_USER: "drupal"
+    MYSQL_PASSWORD: "drupal"
+    MYSQL_ROOT_PASSWORD: "root"
+    SITE_DIR: "${CI_PROJECT_DIR}/.site"
+    WEB_ROOT: "${CI_PROJECT_DIR}/.site/web"
+    DB_URL: "mysql://drupal:drupal@database/drupal"
+    LAUNCH_URL: "http://127.0.0.1"
+    ADMIN_NAME: "webmaster"
+    ADMIN_PASS: "dD.123123ddd"
+    ADMIN_MAIL: "webmaster@vardot.com"
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - tests/reports/
+      - tests/screenshots/
+      - tests/videos/
+  before_script:
+    # System + PHP tooling.
+    - apt-get update -y
+    # imagemagick provides the `identify`/`convert` binaries the Varbase Media
+    # Base ImageMagick toolkit shells out to when building image derivatives;
+    # librsvg2-bin provides the `rsvg-convert` delegate ImageMagick uses to read
+    # the demo SVG icons. Without either, image-bearing pages 500.
+    - apt-get install -y --no-install-recommends git unzip curl jq default-mysql-client imagemagick librsvg2-bin
+        libzip-dev libpng-dev libjpeg-dev libwebp-dev libfreetype6-dev libonig-dev
+    - docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype
+    - docker-php-ext-install -j"$(nproc)" gd pdo_mysql zip opcache pcntl
+    # Run PHP the way a served site runs it: php.ini-production, which sets
+    # zend.assertions=-1. The image ships no php.ini at all, which leaves
+    # assertions ON — and Drupal validates Single Directory Component props
+    # inside an assert(). With assertions on, rendering ANY image media in the
+    # media_16_09 view mode throws
+    #   [vartheme_bs5:dynamic-responsive-image/width] Integer value found, but a
+    #   string or an object is required. The provided value is: "16".
+    # because varbase_media_base's drimage aspect_ratio settings are integers
+    # after config-schema casting while the component declares strings. That
+    # mismatch is upstream (varbase_media_base + vartheme_bs5), reproduces on a
+    # stock Varbase 11 site with no part of this recipe installed, and is
+    # invisible on any production-configured site. Assertions stay off here so
+    # the job tests this recipe, not that upstream mismatch; the memory limit is
+    # re-raised in conf.d, which loads after php.ini.
+    - cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
+    - echo "memory_limit=-1" > /usr/local/etc/php/conf.d/zz-memory.ini
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    - apt-get install -y nodejs
+    # Make git clones resilient to a flaky runner network (RPC/stream resets).
+    - git config --global http.version HTTP/1.1
+    - git config --global http.postBuffer 1048576000
+    - git config --global http.lowSpeedLimit 1000
+    - git config --global http.lowSpeedTime 300
+    # Install FROM varbase_project's committed composer.lock (dev-pinned, patched
+    # via its committed patches.lock.json) — do NOT re-solve from scratch, which
+    # drifts to broken beta releases. --no-scripts: the yarn libraries sync runs
+    # as its own CI step below.
+    - |
+      created=0
+      for i in 1 2 3; do
+        composer create-project drupal/varbase_project:11.0.x-dev "$SITE_DIR" --no-interaction --no-scripts --ignore-platform-req=ext-pgsql && { created=1; break; }
+        echo "composer create-project attempt $i failed — retrying in 20s"; rm -rf "$SITE_DIR"; sleep 20
+      done
+      [ "$created" = "1" ] || { echo "composer create-project failed after 3 attempts"; exit 1; }
+    - cd "$SITE_DIR"
+    - composer config allow-plugins true -n
+    - composer config minimum-stability dev
+    - composer config repositories.search_base path "$CI_PROJECT_DIR"
+    # Retry the require — git.drupalcode.org clones intermittently reset (RPC
+    # failed / stream not closed) on a runner, and a single hiccup should not
+    # fail the build; five failures do fail it, rather than being swallowed.
+    # There is no separate `composer install` afterwards: create-project has
+    # already installed from varbase_project's lock and this require installs
+    # what it adds, so a second install only re-runs the platform check against
+    # a lock it has just rewritten.
+    - |
+      required=0
+      for i in 1 2 3 4 5; do
+        composer require "drupal/varbase_search_base:@dev" drush/drush:^13 -W --no-interaction --ignore-platform-req=ext-pgsql && { required=1; break; }
+        echo "composer require attempt $i failed — retrying in 15s"; sleep 15
+      done
+      [ "$required" = "1" ] || { echo "composer require failed after 5 attempts"; exit 1; }
+    # Apply the Drupal core #2741429 patch directly (EntityDisplayBase: guard a
+    # NULL $mode_entity in calculateDependencies). A lock-less create-project +
+    # targeted require extracts drupal/core before vardot/varbase-patches is
+    # active, so core ships unpatched and a recipe's layout_builder view display
+    # can fatal during site:install with "Call to a member function
+    # getConfigDependencyName() on null".
+    - |
+      curl -fsSL -o /tmp/2741429.patch "https://raw.githubusercontent.com/Vardot/drupal-core-patches/refs/heads/patches/drupal-core--2026-07-02--2741429--entitydisplaybase-null-mode-entity.patch"
+      if patch -p1 -d "$WEB_ROOT" --forward --dry-run < /tmp/2741429.patch; then
+        patch -p1 -d "$WEB_ROOT" --forward < /tmp/2741429.patch
+      else
+        echo "core #2741429 already applied or not applicable; continuing"
+      fi
+      grep -q "issues/2741429" "$WEB_ROOT/core/lib/Drupal/Core/Entity/EntityDisplayBase.php" || { echo "ERROR: core #2741429 patch not present after apply"; exit 1; }
+    # Populate web/libraries (ckeditor5 media-embed, dropzone, …) via the
+    # varbase_project `postinstall` sync. Without it CKEditor 5 fails to
+    # initialise and the media library breaks, which sinks the cover-art
+    # scenarios.
+    - corepack enable || true
+    - YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install --network-timeout 600000
+    # Make the synced libraries world-readable so Apache (www-data) can serve
+    # them — yarn creates them as root.
+    - chmod -R a+rX "$WEB_ROOT/libraries" || true
+    # Install Varbase Starter, then apply the recipe under test on top of it —
+    # the way a site actually adopts this recipe, and the only way it can be
+    # applied. Composing the two into one Site recipe and installing that in a
+    # single run fails core's recipe validation before any module is installed:
+    #
+    #   [config][actions][views.view.search]: Config actions cannot be applied
+    #   to views.view.search because the views extension is not installed, and
+    #   is not installed by this recipe or any of the recipes it depends on.
+    #
+    # Nothing is re-applied by applying it second: this recipe depends on no
+    # other recipe, so there are no shared base recipes to collide with.
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" site:install "$SITE_DIR/recipes/varbase_starter" --db-url="$DB_URL" --account-name="$ADMIN_NAME" --account-pass="$ADMIN_PASS" --account-mail="$ADMIN_MAIL" --site-name="Search Base Test" --locale=en -y
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" cache:rebuild
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" recipe "$SITE_DIR/recipes/varbase_search_base"
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" cache:rebuild
+    # Test-ready prep: no antibot, no aggregation. Uninstall Big Pipe — its
+    # server-side placeholder sub-requests deadlock a single-threaded server.
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" pm:uninstall antibot -y || true
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" pm:uninstall big_pipe -y || true
+    # Security Kit sets a Content-Security-Policy that blocks scripts served
+    # from a CDN. Uninstall it for the headless test run (like antibot).
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" pm:uninstall seckit -y || true
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" config:set system.performance css.preprocess 0 -y || true
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" config:set system.performance js.preprocess 0 -y || true
+    # Seed the testing users. The account NAME must be the human role label
+    # (e.g. "Content editor") because cucumber.js logs in by that label; the
+    # mails mirror .ddev/commands/web/assets/varbase.users.yml.
+    - |
+      seed_user() { # $1=name  $2=mail  $3=role (empty for none)
+        bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" user:create "$1" --mail="$2" --password="dD.123123ddd" || true
+        [ -n "$3" ] && bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" user:role:add "$3" "$1" || true
+      }
+      seed_user "Normal user"    "test.authenticated@vardot.com"  ""
+      seed_user "Content editor" "test.content_editor@vardot.com" "content_editor"
+      seed_user "Content admin"  "test.content_admin@vardot.com"  "content_admin"
+      seed_user "SEO admin"      "test.seo_admin@vardot.com"      "seo_admin"
+      seed_user "Site admin"     "test.site_admin@vardot.com"     "site_admin"
+      seed_user "Super admin"    "test.super_admin@vardot.com"    "administrator"
+    # Seed the deterministic test content (15 published nodes carrying one
+    # shared keyword — 9 Blog post and 6 Utility page, of which 3 are authored
+    # over a year ago) that the keyword, facet, Date Published and pager
+    # scenarios assert against. A testing-only recipe applied with `drush
+    # recipe`, not a PHP fixture.
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" recipe "$CI_PROJECT_DIR/tests/recipes/varbase_search_base_test_content"
+    # Fill the search index. Nothing is searchable until the index runs, and on
+    # a CI site cron never does.
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" search-api:index
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" search-api:status
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" cache:rebuild
+    # Point Apache at the Drupal docroot, honour its .htaccess (clean URLs) and
+    # let www-data read the built site.
+    - sed -ri "s!DocumentRoot /var/www/html!DocumentRoot ${WEB_ROOT}!g" /etc/apache2/sites-available/000-default.conf
+    - printf '<Directory %s>\n  Options FollowSymLinks\n  AllowOverride All\n  Require all granted\n</Directory>\n' "$WEB_ROOT" > /etc/apache2/conf-available/drupal-docroot.conf
+    - a2enconf drupal-docroot && a2enmod rewrite
+    - chown -R www-data:www-data "$WEB_ROOT/sites/default/files" || true
+    # Test toolchain.
+    - cd "$CI_PROJECT_DIR"
+    - npm install --no-audit --no-fund
+    - npx playwright install --with-deps chromium
+  script:
+    # Serve the site with Apache + mod_php (a real webserver — no built-in-server
+    # response truncation). Start it as a daemon so it stays up for cucumber.
+    - apache2ctl start || service apache2 start
+    - for i in $(seq 1 45); do curl -sf -o /dev/null "$LAUNCH_URL/" && break; sleep 2; done
+    - curl -sf -o /dev/null "$LAUNCH_URL/" || { echo "site not serving:"; apache2ctl -S 2>&1 | tail -20; tail -30 /var/log/apache2/error.log 2>/dev/null; exit 1; }
+    # Verbose errors so a 500 renders its exception + backtrace inline, then
+    # clear the watchdog so the health check below shows only fresh errors.
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" config:set system.logging error_level verbose -y || true
+    - bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" watchdog:delete all -y || true
+    # Health-check the search page, empty and with a keyword, before the suite:
+    # a non-200 on either means the recipe left a broken Canvas page, view
+    # display or facet, so fail fast and surface the real error instead of a
+    # wall of red scenarios.
+    - |
+      for path in "/search" "/search?keywords=Varbasesearchtest"; do
+        code=$(curl -s -L -o /tmp/page.html -w "%{http_code}" "$LAUNCH_URL$path")
+        echo "$path -> HTTP $code  title: $(grep -aoiE '<title>[^<]*</title>' /tmp/page.html | head -1)"
+        echo "$path carries a fixture result: $(grep -ac 'Varbase Example Search' /tmp/page.html || true)"
+        if [ "$code" != "200" ]; then
+          echo "$path did not return 200 — page exception:"
+          grep -aioE "(PluginNotFoundException|Exception[^<]{0,180}|Error:[^<]{0,180}|in [^ <]+\.php on line [0-9]+|does not exist[^<]{0,120}|no such[^<]{0,120})" /tmp/page.html | head -15 || true
+          echo "--- fresh watchdog errors (full) ---"
+          bash "$SITE_DIR/bin/drush" --root="$WEB_ROOT" watchdog:show --count=5 --severity=Error --extended 2>&1 | tail -80 || true
+          exit 1
+        fi
+      done
+    - cd "$CI_PROJECT_DIR"
+    # @external is reserved for scenarios that need a live third-party service,
+    # which a network-isolated runner cannot reach — run those locally, not here.
+    - BROWSER=chromium node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js --tags "not @wip and not @external" --retry 1
