@@ -23,5 +23,5 @@
     "drupal/facets": "~3.0",
     "drupal/search_api": "~1"
   },
-  "version": "1.0.1"
+  "version": "1.0.x-dev"
 }
