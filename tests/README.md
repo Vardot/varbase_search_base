@@ -21,6 +21,8 @@ tests/
 ├── step-definitions/
 │   └── search.steps.js                       # the keyword bar, the Content Type facet, the
 │                                             #   Date Published filter, the results summary
+├── selectors/
+│   └── selectors.json                        # every selector, under a plain name
 └── recipes/
     └── varbase_search_base_test_content/     # a `type: Content` seed recipe: 15 published nodes
                                               #   carrying one keyword — 9 Blog post, 6 Utility page,
@@ -37,20 +39,25 @@ small.
 
 The search page carries the same exposed filter form three times: the header
 search block, the block above the results, and the Date Published rail. Each one
-renders a `keywords` input and a submit button, so a label-first
-`I fill in "Search by keyword"` matches three elements and fails on Playwright's
-strict mode. `I search for "..."` scopes the fill and the submit to the results
-block's own form by its `data-drupal-selector`, which stays stable however many
-copies Drupal renders.
+renders a "Search by keyword" field and a submit button, so a label-first
+`I fill in "Search by keyword"` matches more than one field and fails on
+Playwright's strict mode. `I search for "..."` scopes the fill and the submit
+to the results block's own form. None of the forms has an accessible name, so
+each one comes from the selector registry by a plain name.
 
-The Content Type facet needs one too: the checkbox widget's JavaScript hides the
-facet link and puts a real checkbox in front of it, so the link is present but
-unclickable.
+The Content Type facet needs one too: its script puts a checkbox named
+"<type> (<count>)" in front of each option link, and the steps read the option
+and its count from that name.
 
 So does opening a result. A result renders as a text card whose link covers the
 whole card and is named by the title, so it has no box of its own to click.
 `I open the "..." search result` focuses that link and presses Enter, the way a
 keyboard user opens it.
+
+Every selector lives in `selectors/selectors.json` under a plain name
+(`search results form`, `search keywords`, `content type facet`, ...), which
+cucumber.js loads for every scenario. Feature files and steps use those names,
+and find the controls inside a block by role and accessible name.
 
 ## The fixture and its numbers
 

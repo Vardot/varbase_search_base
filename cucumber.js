@@ -99,7 +99,7 @@ module.exports = {
         css: {},
         xpath: {},
         filesPath: './tests/selectors/',
-        files: [],
+        files: ['selectors.json'],
         offset: 60,
         breakpoints: {
           xs:   { width: 375,  height: 667  },

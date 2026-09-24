@@ -10,7 +10,7 @@ Feature: Search Base - Searching by keyword
       And wait
       And I search for "Varbasesearchtest"
      Then the search results summary should show a total of 15
-      And ".view-id-search.view-display-id-results_block .views-row" should have a count of 10 within 10 seconds
+      And the search results should list 10 items
 
   @check @local @development @staging @production
   Scenario: A keyword only one item carries narrows the results to that item
@@ -47,8 +47,8 @@ Feature: Search Base - Searching by keyword
      When I go to "/search?keywords=Varbasesearchtest"
       And wait
      Then I should see text matching "1 - 10 of 15"
-      And ".pager__items" should be visible
+      And I see visible search pager
      When I go to "/search?keywords=Varbasesearchtest&page=1"
       And wait
      Then I should see text matching "11 - 15 of 15"
-      And ".view-id-search.view-display-id-results_block .views-row" should have a count of 5 within 10 seconds
+      And the search results should list 5 items

@@ -16,7 +16,7 @@ Feature: Search Base - Accessibility of the search page
     Given I am an anonymous user
      When I go to "/search"
       And wait
-     Then "form[data-drupal-selector='views-exposed-form-search-results-block'] input[name='keywords']" should be visible within 10 seconds
+     Then I see visible search keywords
       And every form field should have an accessible label
 
   @a11y @check @local @development @staging @production

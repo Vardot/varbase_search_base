@@ -15,18 +15,22 @@ const { smartSettle, friendly } = require('@vardot/varbase-e2e/tests/step-defini
 //   - the keyword bar. The search page carries the SAME exposed filter form
 //     three times (the header search block, the results block above the
 //     results, and the Date Published rail), so every one of them has a
-//     "keywords" input and a submit button. A label-first "I fill in" step
-//     matches all three and fails on strict mode; these steps scope each
-//     action to one form by its data-drupal-selector, which stays stable
-//     however many copies Drupal renders.
+//     "Search by keyword" field and a submit button. A label-first "I fill in"
+//     step matches more than one and fails on strict mode; these steps scope
+//     each action to one form. The forms have no accessible name, so each one
+//     comes from the selector registry by a plain name.
 //   - the Content Type facet — its options, their counts, and choosing one.
 //   - the Date Published exposed filter, a grouped radio set in its own block.
 //   - the results summary and the result titles, read from the results block
 //     only, so a match anywhere else on the page cannot pass a scenario.
 //
+// Every selector lives in tests/selectors/selectors.json under a plain name
+// ("search results form", "search keywords", ...). Controls inside a block are
+// found by role and accessible name.
+//
 // SAFETY: every step acts on a verified, specific element inside the search
 // page's own blocks and fails with a plain-English message when that element
-// is not there — no "first form on the page" fallbacks.
+// is not there, with no "first form on the page" fallbacks.
 // -----------------------------------------------------------------------------
 
 // The search page renders a Canvas page, a views results block, a facet block
@@ -35,20 +39,28 @@ const { smartSettle, friendly } = require('@vardot/varbase-e2e/tests/step-defini
 // as a product failure. 90s still fails a step that is genuinely stuck.
 setDefaultTimeout(90000);
 
-const RESULTS_FORM = 'form[data-drupal-selector="views-exposed-form-search-results-block"]';
-const DATE_FORM = 'form[data-drupal-selector="views-exposed-form-search-date-block"]';
-const RESULTS_VIEW = '.view-id-search.view-display-id-results_block';
-const FACET_BLOCK = '.block-facet-blocksearch-content-type';
-
 const budgetOf = (world) => (world.minWaitTime && world.minWaitTime.page) || 8000;
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * Resolve one of the search page's blocks, failing plainly when it is absent.
+ * Resolve a plain name from the selector registry (tests/selectors/selectors.json).
  */
-async function requireLocator(page, selector, what, hint) {
-  const locator = page.locator(selector).first();
+function named(world, name) {
+  const selector = world.__selectorsCss && world.__selectorsCss[name];
+  if (!selector) {
+    throw friendly(`The selector registry has no "${name}".`, 'Add it to tests/selectors/selectors.json.');
+  }
+  return world.page.locator(selector);
+}
+
+/**
+ * Resolve one of the search page's blocks by its registry name, failing
+ * plainly when it is absent.
+ */
+async function requireLocator(world, name, what, hint) {
+  const locator = named(world, name).first();
   if (!(await locator.count())) {
-    throw friendly(`Could not find ${what} on "${page.url()}".`, hint);
+    throw friendly(`Could not find ${what} on "${world.page.url()}".`, hint);
   }
   return locator;
 }
@@ -56,10 +68,10 @@ async function requireLocator(page, selector, what, hint) {
 /**
  * Read the results summary line ("Displaying 1 - 10 of 15 results").
  */
-async function resultsSummaryText(page) {
+async function resultsSummaryText(world) {
   const view = await requireLocator(
-    page,
-    RESULTS_VIEW,
+    world,
+    'search results',
     'the search results block',
     'Open /search and run a search first — the results block renders only on the search page.'
   );
@@ -67,17 +79,36 @@ async function resultsSummaryText(page) {
 }
 
 /**
- * Collect the Content Type facet options as { label, count } pairs.
+ * Collect the Content Type facet options as { label, count } pairs, read from
+ * each option's accessible name ("Blog post (9)"). The facet's script turns
+ * the option links into checkboxes of the same name.
  */
-async function facetOptions(page) {
-  return page.$$eval(`${FACET_BLOCK} a[data-drupal-facet-item-value]`, (links) =>
-    links.map((link) => ({
-      label: (link.querySelector('.facet-item__value') || link).textContent.trim(),
-      value: link.getAttribute('data-drupal-facet-item-value'),
-      filter: link.getAttribute('data-drupal-facet-filter-value'),
-      count: Number(link.getAttribute('data-drupal-facet-item-count')),
-    }))
-  );
+async function facetOptions(world) {
+  const facet = named(world, 'content type facet');
+  if (!(await facet.count())) {
+    return [];
+  }
+  const names = await facet
+    .getByRole('checkbox')
+    .or(facet.getByRole('link'))
+    .evaluateAll((items) =>
+      items.map((item) =>
+        ((item.labels && item.labels[0] ? item.labels[0].innerText : item.innerText) || '').replace(/\s+/g, ' ').trim()
+      )
+    );
+  return names
+    .map((name) => /^(.*)\s\((\d+)\)$/.exec(name))
+    .filter(Boolean)
+    .map((match) => ({ label: match[1], count: Number(match[2]) }));
+}
+
+/**
+ * One Content Type facet option, found by role and accessible name.
+ */
+function facetOption(world, label) {
+  const facet = named(world, 'content type facet');
+  const name = new RegExp(`^${escapeRegExp(label)} \\(\\d+\\)$`);
+  return facet.getByRole('checkbox', { name }).or(facet.getByRole('link', { name })).first();
 }
 
 /**
@@ -95,14 +126,13 @@ async function facetOptions(page) {
  */
 When(/^(?:I |we )*search for "([^"]*)"$/, async function (keywords) {
   const form = await requireLocator(
-    this.page,
-    RESULTS_FORM,
+    this,
+    'search results form',
     'the search keyword bar',
     'Go to "/search" before searching — the keyword bar is a block on that page.'
   );
-  const input = form.locator('input[name="keywords"]').first();
-  await input.fill(keywords);
-  await form.locator('input[type="submit"], button[type="submit"]').first().click();
+  await form.locator(this.__selectorsCss['search keywords']).first().fill(keywords);
+  await form.getByRole('button', { name: 'Search', exact: true }).click();
   await smartSettle(this.page, budgetOf(this));
 });
 
@@ -121,8 +151,8 @@ When(/^(?:I |we )*search for "([^"]*)"$/, async function (keywords) {
  */
 When(/^(?:I |we )*open the "([^"]*)" search result$/, async function (title) {
   const view = await requireLocator(
-    this.page,
-    RESULTS_VIEW,
+    this,
+    'search results',
     'the search results block',
     'Run a search first, the results block renders only on the search page.'
   );
@@ -146,7 +176,7 @@ When(/^(?:I |we )*open the "([^"]*)" search result$/, async function (title) {
  * Example #5: Then the search results summary should show a total of 6
  */
 Then(/^the search results summary should show a total of (\d+)$/, async function (total) {
-  const text = await resultsSummaryText(this.page);
+  const text = await resultsSummaryText(this);
   const match = text.match(/Displaying\s+\d+\s*-\s*\d+\s+of\s+(\d+)\s+results/i);
   if (!match) {
     throw friendly(
@@ -162,6 +192,26 @@ Then(/^the search results summary should show a total of (\d+)$/, async function
 });
 
 /**
+ * Assert how many results the current page of the listing shows.
+ *
+ * Example #1: Then the search results should list 10 items
+ * Example #2: And the search results should list 5 items
+ * Example #3: Then the search results should list 1 item
+ * Example #4: And the search results should list 9 items
+ * Example #5: Then the search results should list 7 items
+ */
+Then(/^the search results should list (\d+) items?$/, async function (expected) {
+  const rows = named(this, 'search result');
+  const deadline = Date.now() + 10000;
+  let count = await rows.count();
+  while (count !== Number(expected) && Date.now() < deadline) {
+    await this.page.waitForTimeout(100);
+    count = await rows.count();
+  }
+  assert.strictEqual(count, Number(expected), `Expected ${expected} search results on the page, but it lists ${count}.`);
+});
+
+/**
  * Assert a title is (or is not) among the search results.
  *
  * Example #1: Then the search results should include "Varbase Example Search Blog 01"
@@ -171,7 +221,7 @@ Then(/^the search results summary should show a total of (\d+)$/, async function
  * Example #5: Then the search results should include "Varbase Example Search Blog 07"
  */
 Then(/^the search results should( not)? include "([^"]*)"$/, async function (negate, title) {
-  const text = await resultsSummaryText(this.page);
+  const text = await resultsSummaryText(this);
   const found = text.includes(title);
   if (negate) {
     assert.ok(!found, `Expected "${title}" NOT to be among the search results, but it is.`);
@@ -193,12 +243,13 @@ Then(
   /^the Content Type facet should offer "([^"]*)" with a count of (\d+)$/,
   async function (label, count) {
     await requireLocator(
-      this.page,
-      FACET_BLOCK,
+      this,
+      'content type facet',
       'the Content Type facet block',
-      'The facet renders only when the search has results — search for something first.'
+      'The facet renders only when the search has results, search for something first.'
     );
-    const options = await facetOptions(this.page);
+    await facetOption(this, label).waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+    const options = await facetOptions(this);
     const option = options.find((item) => item.label === label);
     assert.ok(
       option,
@@ -225,7 +276,7 @@ Then(
  * Example #5: Then the Content Type facet should offer no content types
  */
 Then(/^the Content Type facet should offer no content types$/, async function () {
-  const options = (await this.page.locator(FACET_BLOCK).count()) ? await facetOptions(this.page) : [];
+  const options = await facetOptions(this);
   assert.strictEqual(
     options.length,
     0,
@@ -246,30 +297,24 @@ Then(/^the Content Type facet should offer no content types$/, async function ()
  */
 When(/^(?:I |we )*choose the "([^"]*)" Content Type facet$/, async function (label) {
   await requireLocator(
-    this.page,
-    FACET_BLOCK,
+    this,
+    'content type facet',
     'the Content Type facet block',
-    'The facet renders only when the search has results — search for something first.'
+    'The facet renders only when the search has results, search for something first.'
   );
-  const options = await facetOptions(this.page);
-  const option = options.find((item) => item.label === label);
-  if (!option) {
-    throw friendly(
-      `The Content Type facet offers no "${label}" option.`,
-      `It offers ${options.map((item) => `"${item.label}"`).join(', ') || 'nothing'}.`
-    );
+  const option = facetOption(this, label);
+  await option.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  if (!(await option.count())) {
+    const offered = (await facetOptions(this)).map((item) => `"${item.label}"`).join(', ');
+    throw friendly(`The Content Type facet offers no "${label}" option.`, `It offers ${offered || 'nothing'}.`);
   }
-  // The checkbox widget's JavaScript hides the facet link and puts a real
-  // checkbox in front of it, so the link is there but unclickable. Check the
-  // checkbox when it is there, and fall back to the link when the widget's
-  // JavaScript has not run.
-  const checkbox = this.page
-    .locator(`${FACET_BLOCK} input.facets-checkbox[value="${option.filter}"]`)
-    .first();
-  if ((await checkbox.count()) && (await checkbox.isVisible().catch(() => false))) {
-    await checkbox.check();
+  // The checkbox widget's script puts a real checkbox in front of each facet
+  // link. Check it when it is there, and follow the link when the script has
+  // not run.
+  if ((await option.getAttribute('type')) === 'checkbox') {
+    await option.check();
   } else {
-    await this.page.locator(`${FACET_BLOCK} a[data-drupal-facet-item-value="${option.value}"]`).first().click();
+    await option.click();
   }
   await this.page.waitForURL(/f%5B0%5D=|f\[0\]=/, { timeout: 30000 }).catch(() => {});
   await smartSettle(this.page, budgetOf(this));
@@ -289,8 +334,8 @@ When(/^(?:I |we )*choose the "([^"]*)" Content Type facet$/, async function (lab
  */
 When(/^(?:I |we )*choose the "([^"]*)" Date Published filter$/, async function (label) {
   const form = await requireLocator(
-    this.page,
-    DATE_FORM,
+    this,
+    'search date form',
     'the Date Published filter',
     'Go to "/search" first — the Date Published filter is a block on that page.'
   );
@@ -326,8 +371,8 @@ When(/^(?:I |we )*choose the "([^"]*)" Date Published filter$/, async function (
  */
 Then(/^the "([^"]*)" Date Published filter should be chosen$/, async function (label) {
   const form = await requireLocator(
-    this.page,
-    DATE_FORM,
+    this,
+    'search date form',
     'the Date Published filter',
     'Go to "/search" first — the Date Published filter is a block on that page.'
   );

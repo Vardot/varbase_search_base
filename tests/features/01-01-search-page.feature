@@ -19,8 +19,8 @@ Feature: Search Base - The search page
     Given I am an anonymous user
      When I go to "/search"
       And wait
-     Then "form[data-drupal-selector='views-exposed-form-search-results-block'] input[name='keywords']" should be visible within 10 seconds
-      And "form[data-drupal-selector='views-exposed-form-search-date-block']" should be visible within 10 seconds
+     Then I see visible search keywords
+      And I see visible search date form
       And I should see "- Any -"
       And I should see "Past 24 Hours"
       And I should see "Past Week"
