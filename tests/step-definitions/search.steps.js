@@ -107,6 +107,36 @@ When(/^(?:I |we )*search for "([^"]*)"$/, async function (keywords) {
 });
 
 /**
+ * Open one search result from the keyboard.
+ *
+ * A result renders as a card whose link covers the whole card and carries the
+ * title as its accessible name, so it has no box of its own to click. Focusing
+ * it and pressing Enter is how a keyboard user opens it.
+ *
+ * Example #1: When I open the "Varbase Example Search Blog 07" search result
+ * Example #2: And I open the "Varbase Example Search Page 01" search result
+ * Example #3: When we open the "Varbase Example Search Blog 01" search result
+ * Example #4: And we open the "Varbase Example Search Blog 08" search result
+ * Example #5: Given I open the "Varbase Example Search Page 06" search result
+ */
+When(/^(?:I |we )*open the "([^"]*)" search result$/, async function (title) {
+  const view = await requireLocator(
+    this.page,
+    RESULTS_VIEW,
+    'the search results block',
+    'Run a search first, the results block renders only on the search page.'
+  );
+  const link = view.getByRole('link', { name: title, exact: true }).first();
+  if (!(await link.count())) {
+    throw friendly(`The search results offer no link to "${title}".`, 'Check the search returned it.');
+  }
+  await link.focus();
+  await this.page.keyboard.press('Enter');
+  await this.page.waitForLoadState('load').catch(() => {});
+  await smartSettle(this.page, budgetOf(this));
+});
+
+/**
  * Assert the total the results summary reports.
  *
  * Example #1: Then the search results summary should show a total of 15

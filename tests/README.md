@@ -16,7 +16,8 @@ tests/
 │   ├── 02-01-search-by-keyword.feature          # the keyword bar, the empty result, the pager
 │   ├── 03-01-content-type-facet.feature         # the facet's options, counts and narrowing
 │   ├── 04-01-date-published-filter.feature      # the Date Published groups and the facet counts under them
-│   └── 05-01-search-access.feature              # anonymous and logged-in visitors can search
+│   ├── 05-01-search-access.feature              # anonymous and logged-in visitors can search
+│   └── 06-01-search-accessibility.feature       # accessibility of each state of the search page
 ├── step-definitions/
 │   └── search.steps.js                       # the keyword bar, the Content Type facet, the
 │                                             #   Date Published filter, the results summary
@@ -45,6 +46,11 @@ copies Drupal renders.
 The Content Type facet needs one too: the checkbox widget's JavaScript hides the
 facet link and puts a real checkbox in front of it, so the link is present but
 unclickable.
+
+So does opening a result. A result renders as a text card whose link covers the
+whole card and is named by the title, so it has no box of its own to click.
+`I open the "..." search result` focuses that link and presses Enter, the way a
+keyboard user opens it.
 
 ## The fixture and its numbers
 
@@ -113,3 +119,9 @@ test content recipe, fills the search index and runs the whole suite — see
 `.gitlab-ci.yml`. `@external` is reserved for scenarios that need a live
 third-party service; the suite has none today, and the pipeline runs
 `--tags "not @wip and not @external"` so one can be added without touching CI.
+
+Run only the accessibility scenarios with `--tags "@a11y"`. Each state of the
+search page (empty, with results, no results, a facet applied, the date filter
+applied) is gated on no serious or critical axe violations, and the page with
+results runs the full check (axe plus the structural probes). The label probe
+does not count a placeholder as a label, which axe does.

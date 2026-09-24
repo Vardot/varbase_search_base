@@ -1,7 +1,7 @@
 // cucumber-js configuration for the Varbase Search Base functional testing suite.
 //
 // Drives the search recipe through the browser (Playwright + Cucumber-js via
-// varbase-e2e >= 2.0.4). Feature files live flat in tests/features/ — one recipe,
+// varbase-e2e >= 2.0.7). Feature files live flat in tests/features/, one recipe,
 // no per-feature subfolders.
 //   yarn test                # all features (tests/features/*.feature)
 //   yarn test:chromium       # force chromium

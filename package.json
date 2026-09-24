@@ -16,7 +16,7 @@
     "generate-reports": "node ./node_modules/@vardot/varbase-e2e/bin/generate-reports.js"
   },
   "devDependencies": {
-    "@vardot/varbase-e2e": "^2.0.4",
+    "@vardot/varbase-e2e": "^2.0.7",
     "@cucumber/pretty-formatter": "^1.0.1"
   },
   "allowScripts": {

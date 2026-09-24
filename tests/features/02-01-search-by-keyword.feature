@@ -36,7 +36,7 @@ Feature: Search Base - Searching by keyword
     Given I am an anonymous user
      When I go to "/search?keywords=Varbasesearchsingle"
       And wait
-      And I follow "Varbase Example Search Blog 07"
+      And I open the "Varbase Example Search Blog 07" search result
       And wait
      Then the response status code should be 200
       And I should see "Varbase Example Search Blog 07"

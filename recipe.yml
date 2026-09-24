@@ -32,6 +32,31 @@ config:
     # displays on top of these.
     views.view.search:
       simpleConfigUpdate:
+        # The keyword field ships with an empty label and a placeholder, which
+        # leaves it unnamed for a screen reader. Give it a label and have Better
+        # Exposed Filters render it visually hidden, on every display that
+        # carries the field.
+        display.default.display_options.filters.search_api_fulltext.expose.label: 'Search by keyword'
+        display.default.display_options.exposed_form:
+          type: bef
+          options:
+            submit_button: Search
+            reset_button: false
+            reset_button_label: Reset
+            exposed_sorts_label: 'Sort by'
+            expose_sort_order: false
+            sort_asc_label: Asc
+            sort_desc_label: Desc
+            text_input_required: ''
+            text_input_required_format: content_format
+            bef:
+              general:
+                input_required: true
+              filter:
+                search_api_fulltext:
+                  plugin_id: default
+                  advanced:
+                    hide_label: true
         display.default.display_options.filters.search_api_datasource:
           id: search_api_datasource
           table: search_api_index_content
@@ -138,9 +163,14 @@ config:
             row:
               type: search_api
               options:
+                # Node rows render as a text card, which links the whole card
+                # and prints no author picture. A bundle without that display
+                # falls back to its default one.
                 view_modes:
                   'entity:canvas_page':
                     canvas_page: default
+                  'entity:node':
+                    ':default': text_card_small
             defaults:
               pager: false
               row: false
@@ -185,6 +215,11 @@ config:
                     autosubmit_textfield_delay: 500
                     autosubmit_hide: true
                     autosubmit_exposed_input: false
+                  filter:
+                    search_api_fulltext:
+                      plugin_id: default
+                      advanced:
+                        hide_label: true
             defaults:
               exposed_form: false
             display_description: 'Date Published filter for the search results rail.'
