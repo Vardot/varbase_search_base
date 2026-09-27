@@ -197,7 +197,9 @@ recipe:
     - |
       required=0
       for i in 1 2 3 4 5; do
-        composer require "drupal/varbase_search_base:@dev" drush/drush:^13 -W --no-interaction --ignore-platform-req=ext-pgsql && { required=1; break; }
+        # Temporary (#3625610): keep Twig below 3.30 until a Twig release compatible
+        # with Drupal core is out; 3.30.0 breaks every page render.
+        composer require "drupal/varbase_search_base:@dev" drush/drush:^13 "twig/twig:<3.30" -W --no-interaction --ignore-platform-req=ext-pgsql && { required=1; break; }
         echo "composer require attempt $i failed — retrying in 15s"; sleep 15
       done
       [ "$required" = "1" ] || { echo "composer require failed after 5 attempts"; exit 1; }
