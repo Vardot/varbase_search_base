@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.0.3] - 2026-09-27
 ### Changed
 - Update varbase-e2e to 2.0.7 and add accessibility scenarios. Label the
   search keyword field and render node results as text cards
@@ -39,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporarily remove Ultimate Cron until it has a stable release
   ([#3621494](https://www.drupal.org/i/3621494)).
 
-[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.2...1.0.x
+[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.3...1.0.x
+[1.0.3]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.2...1.0.3
 [1.0.2]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.1...1.0.2
 [1.0.1]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.0...1.0.1
 [1.0.0]: https://git.drupalcode.org/project/varbase_search_base/-/commits/1.0.0
