@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-10-11
+### Changed
+- Remove the temporary CI-only `twig/twig:<3.30` pin. Drupal core 11.4.8,
+  11.3.18 and 10.6.18 fixed the Twig 3.30 render error, so CI builds on the
+  current Twig again ([#3629829](https://www.drupal.org/i/3629829)).
+- Fix `yarn install` in CI now that Varbase Project 11.0.x-dev ships no
+  `yarn.lock`: CI creates an empty one first, so Yarn does not take this
+  recipe's `package.json` as the project root
+  ([#3630031](https://www.drupal.org/i/3630031)).
+
 ## [1.0.3] - 2026-09-27
 ### Changed
 - Update varbase-e2e to 2.0.7 and add accessibility scenarios. Label the
@@ -41,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporarily remove Ultimate Cron until it has a stable release
   ([#3621494](https://www.drupal.org/i/3621494)).
 
-[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.3...1.0.x
+[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.4...1.0.x
+[1.0.4]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.3...1.0.4
 [1.0.3]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.2...1.0.3
 [1.0.2]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.1...1.0.2
 [1.0.1]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.0...1.0.1
