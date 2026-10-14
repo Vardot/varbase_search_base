@@ -141,102 +141,83 @@ config:
                   max: ''
                   value: '-1 year'
                   type: offset
-        display.results_block:
-          id: results_block
-          display_title: 'Search results'
-          display_plugin: block
-          position: 3
-          display_options:
-            pager:
-              type: full
-              options:
-                offset: 0
-                pagination_heading_level: h4
-                items_per_page: 10
-                id: 0
-                tags:
-                  next: ›
-                  previous: ‹
-                  first: '« First'
-                  last: 'Last »'
-                quantity: 9
-            row:
-              type: search_api
-              options:
-                # Node rows render as a text card, which links the whole card
-                # and prints no author picture. A bundle without that display
-                # falls back to its default one.
-                view_modes:
-                  'entity:canvas_page':
-                    canvas_page: default
-                  'entity:node':
-                    ':default': text_card_small
-            defaults:
-              pager: false
-              row: false
-              exposed_block: false
-            display_description: 'The results listing, placed on the Canvas search page beside the facet rail.'
-            exposed_block: true
-            display_extenders: {  }
-            block_description: 'Search results'
-          cache_metadata:
-            max-age: -1
-            contexts:
-              - 'languages:language_content'
-              - 'languages:language_interface'
-              - url
-              - url.query_args
-              - 'user.node_grants:view'
-              - user.permissions
-            tags:
-              - 'config:search_api.index.content'
-              - 'search_api_list:content'
-        display.date_block:
-          id: date_block
-          display_title: 'Date filter block'
-          display_plugin: block
-          position: 4
-          display_options:
-            exposed_form:
-              type: bef
-              options:
-                submit_button: Apply
-                reset_button: false
-                reset_button_label: Reset
-                exposed_sorts_label: 'Sort by'
-                expose_sort_order: false
-                sort_asc_label: Asc
-                sort_desc_label: Desc
-                text_input_required: ''
-                text_input_required_format: content_format
-                bef:
-                  general:
-                    autosubmit: true
-                    autosubmit_textfield_delay: 500
-                    autosubmit_hide: true
-                    autosubmit_exposed_input: false
-                  filter:
-                    search_api_fulltext:
-                      plugin_id: default
-                      advanced:
-                        hide_label: true
-            defaults:
-              exposed_form: false
-            display_description: 'Date Published filter for the search results rail.'
-            exposed_block: true
-            display_extenders: {  }
-          cache_metadata:
-            max-age: -1
-            contexts:
-              - 'languages:language_content'
-              - 'languages:language_interface'
-              - url
-              - url.query_args
-              - 'user.node_grants:view'
-              - user.permissions
-            tags:
-              - 'config:search_api.index.content'
-              - 'search_api_list:content'
+        # The two displays are written one value at a time, never as a whole
+        # display. A site template that changes or adds keys of its own (row
+        # view modes for its bundles, a pager size) keeps them when a later
+        # recipe applies this one again: only the values below are reset.
+        # Node rows render as a text card, which links the whole card and prints
+        # no author picture. A bundle without that display falls back to its
+        # default one; a site template maps its own bundles next to ':default'.
+        'display.results_block.id': results_block
+        'display.results_block.display_title': Search results
+        'display.results_block.display_plugin': block
+        'display.results_block.position': 3
+        'display.results_block.display_options.pager.type': full
+        'display.results_block.display_options.pager.options.offset': 0
+        'display.results_block.display_options.pager.options.pagination_heading_level': h4
+        'display.results_block.display_options.pager.options.items_per_page': 10
+        'display.results_block.display_options.pager.options.id': 0
+        'display.results_block.display_options.pager.options.tags.next': ›
+        'display.results_block.display_options.pager.options.tags.previous': ‹
+        'display.results_block.display_options.pager.options.tags.first': « First
+        'display.results_block.display_options.pager.options.tags.last': Last »
+        'display.results_block.display_options.pager.options.quantity': 9
+        'display.results_block.display_options.row.type': search_api
+        'display.results_block.display_options.row.options.view_modes.entity:canvas_page.canvas_page': default
+        'display.results_block.display_options.row.options.view_modes.entity:node.:default': text_card_small
+        'display.results_block.display_options.defaults.pager': false
+        'display.results_block.display_options.defaults.row': false
+        'display.results_block.display_options.defaults.exposed_block': false
+        'display.results_block.display_options.display_description': The results listing, placed on the Canvas search page beside the facet rail.
+        'display.results_block.display_options.exposed_block': true
+        'display.results_block.display_options.display_extenders': {  }
+        'display.results_block.display_options.block_description': Search results
+        'display.results_block.cache_metadata.max-age': -1
+        'display.results_block.cache_metadata.contexts':
+          - languages:language_content
+          - languages:language_interface
+          - url
+          - url.query_args
+          - user.node_grants:view
+          - user.permissions
+        'display.results_block.cache_metadata.tags':
+          - config:search_api.index.content
+          - search_api_list:content
+        'display.date_block.id': date_block
+        'display.date_block.display_title': Date filter block
+        'display.date_block.display_plugin': block
+        'display.date_block.position': 4
+        'display.date_block.display_options.exposed_form.type': bef
+        'display.date_block.display_options.exposed_form.options.submit_button': Apply
+        'display.date_block.display_options.exposed_form.options.reset_button': false
+        'display.date_block.display_options.exposed_form.options.reset_button_label': Reset
+        'display.date_block.display_options.exposed_form.options.exposed_sorts_label': Sort by
+        'display.date_block.display_options.exposed_form.options.expose_sort_order': false
+        'display.date_block.display_options.exposed_form.options.sort_asc_label': Asc
+        'display.date_block.display_options.exposed_form.options.sort_desc_label': Desc
+        'display.date_block.display_options.exposed_form.options.text_input_required': ''
+        'display.date_block.display_options.exposed_form.options.text_input_required_format': content_format
+        'display.date_block.display_options.exposed_form.options.bef.general.autosubmit': true
+        'display.date_block.display_options.exposed_form.options.bef.general.autosubmit_textfield_delay': 500
+        'display.date_block.display_options.exposed_form.options.bef.general.autosubmit_hide': true
+        'display.date_block.display_options.exposed_form.options.bef.general.autosubmit_exposed_input': false
+        'display.date_block.display_options.exposed_form.options.bef.filter.search_api_fulltext.plugin_id': default
+        'display.date_block.display_options.exposed_form.options.bef.filter.search_api_fulltext.advanced.hide_label': true
+        'display.date_block.display_options.defaults.exposed_form': false
+        'display.date_block.display_options.display_description': Date Published filter for the search results rail.
+        'display.date_block.display_options.exposed_block': true
+        'display.date_block.display_options.display_extenders': {  }
+        'display.date_block.cache_metadata.max-age': -1
+        'display.date_block.cache_metadata.contexts':
+          - languages:language_content
+          - languages:language_interface
+          - url
+          - url.query_args
+          - user.node_grants:view
+          - user.permissions
+        'display.date_block.cache_metadata.tags':
+          - config:search_api.index.content
+          - search_api_list:content
     search_api.index.content:
       simpleConfigUpdate:
         # Content Type facets read the node bundle and the Date Published filter
