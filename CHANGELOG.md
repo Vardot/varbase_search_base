@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   displays when a later recipe applies this one again: the two displays are
   now written one value at a time instead of as whole maps
   ([#3630922](https://www.drupal.org/i/3630922)).
+- Update the search view and the content index with `setProperties` instead of
+  `simpleConfigUpdate`, which Drupal 11.2 deprecates on config entities and
+  Drupal 12 refuses. The view is saved as an entity, so Views calculates the
+  cache metadata of each display, facets included, instead of the recipe
+  writing a fixed list that left out the facet cache context and tags
+  ([#3630922](https://www.drupal.org/i/3630922)).
 
 ## [1.0.4] - 2026-10-11
 ### Changed

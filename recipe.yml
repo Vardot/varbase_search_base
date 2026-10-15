@@ -31,11 +31,7 @@ config:
     # A site template overrides the wording, the row view modes and adds its own
     # displays on top of these.
     views.view.search:
-      simpleConfigUpdate:
-        # The keyword field ships with an empty label and a placeholder, which
-        # leaves it unnamed for a screen reader. Give it a label and have Better
-        # Exposed Filters render it visually hidden, on every display that
-        # carries the field.
+      setProperties:
         display.default.display_options.filters.search_api_fulltext.expose.label: 'Search by keyword'
         display.default.display_options.exposed_form:
           type: bef
@@ -141,13 +137,6 @@ config:
                   max: ''
                   value: '-1 year'
                   type: offset
-        # The two displays are written one value at a time, never as a whole
-        # display. A site template that changes or adds keys of its own (row
-        # view modes for its bundles, a pager size) keeps them when a later
-        # recipe applies this one again: only the values below are reset.
-        # Node rows render as a text card, which links the whole card and prints
-        # no author picture. A bundle without that display falls back to its
-        # default one; a site template maps its own bundles next to ':default'.
         'display.results_block.id': results_block
         'display.results_block.display_title': Search results
         'display.results_block.display_plugin': block
@@ -172,17 +161,6 @@ config:
         'display.results_block.display_options.exposed_block': true
         'display.results_block.display_options.display_extenders': {  }
         'display.results_block.display_options.block_description': Search results
-        'display.results_block.cache_metadata.max-age': -1
-        'display.results_block.cache_metadata.contexts':
-          - languages:language_content
-          - languages:language_interface
-          - url
-          - url.query_args
-          - user.node_grants:view
-          - user.permissions
-        'display.results_block.cache_metadata.tags':
-          - config:search_api.index.content
-          - search_api_list:content
         'display.date_block.id': date_block
         'display.date_block.display_title': Date filter block
         'display.date_block.display_plugin': block
@@ -207,19 +185,8 @@ config:
         'display.date_block.display_options.display_description': Date Published filter for the search results rail.
         'display.date_block.display_options.exposed_block': true
         'display.date_block.display_options.display_extenders': {  }
-        'display.date_block.cache_metadata.max-age': -1
-        'display.date_block.cache_metadata.contexts':
-          - languages:language_content
-          - languages:language_interface
-          - url
-          - url.query_args
-          - user.node_grants:view
-          - user.permissions
-        'display.date_block.cache_metadata.tags':
-          - config:search_api.index.content
-          - search_api_list:content
     search_api.index.content:
-      simpleConfigUpdate:
+      setProperties:
         # Content Type facets read the node bundle and the Date Published filter
         # reads the authored date, so both have to be in the index.
         field_settings.type:
