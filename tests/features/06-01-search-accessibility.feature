@@ -43,7 +43,7 @@ Feature: Search Base - Accessibility of the search page
      When I go to "/search"
       And wait
       And I search for "Zzzznothingmatchesthis"
-     Then I should see "There are no results for your search, please try another query."
+     Then I should see "No results match your search. Try other keywords or clear the filters."
       And the page should have no serious accessibility violations
 
   @a11y @check @local @development @staging @production
@@ -60,7 +60,7 @@ Feature: Search Base - Accessibility of the search page
     Given I am an anonymous user
      When I go to "/search?keywords=Varbasesearchtest"
       And wait
-      And I choose the "Past Year" Date Published filter
-     Then the "Past Year" Date Published filter should be chosen
+      And I choose the "Past year" Date Published filter
+     Then the "Past year" Date Published filter should be chosen
       And the search results summary should show a total of 12
       And the page should have no serious accessibility violations

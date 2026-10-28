@@ -28,7 +28,7 @@ Feature: Search Base - Searching by keyword
      When I go to "/search"
       And wait
       And I search for "Zzzznothingmatchesthis"
-     Then I should see "There are no results for your search, please try another query."
+     Then I should see "No results match your search. Try other keywords or clear the filters."
       And the search results should not include "Varbase Example Search Blog 01"
 
   @check @local @development @staging @production

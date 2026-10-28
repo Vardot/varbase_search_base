@@ -156,7 +156,11 @@ When(/^(?:I |we )*open the "([^"]*)" search result$/, async function (title) {
     'the search results block',
     'Run a search first, the results block renders only on the search page.'
   );
-  const link = view.getByRole('link', { name: title, exact: true }).first();
+  // A card link may be named by more than the title, so fall back to the row showing it.
+  let link = view.getByRole('link', { name: title }).first();
+  if (!(await link.count())) {
+    link = view.locator('.views-row', { hasText: title }).locator('a[href]').first();
+  }
   if (!(await link.count())) {
     throw friendly(`The search results offer no link to "${title}".`, 'Check the search returned it.');
   }
@@ -326,11 +330,11 @@ When(/^(?:I |we )*choose the "([^"]*)" Content Type facet$/, async function (lab
  * The filter is a radio set in its own block, with Better Exposed Filters
  * auto-submit on, so choosing an option reloads the results by itself.
  *
- * Example #1: When I choose the "Past Year" Date Published filter
- * Example #2: And I choose the "Past 24 Hours" Date Published filter
- * Example #3: When we choose the "Past Week" Date Published filter
- * Example #4: And I choose the "- Any -" Date Published filter
- * Example #5: Given I choose the "Past Month" Date Published filter
+ * Example #1: When I choose the "Past year" Date Published filter
+ * Example #2: And I choose the "Past 24 hours" Date Published filter
+ * Example #3: When we choose the "Past week" Date Published filter
+ * Example #4: And I choose the "Any time" Date Published filter
+ * Example #5: Given I choose the "Past month" Date Published filter
  */
 When(/^(?:I |we )*choose the "([^"]*)" Date Published filter$/, async function (label) {
   const form = await requireLocator(
@@ -343,7 +347,7 @@ When(/^(?:I |we )*choose the "([^"]*)" Date Published filter$/, async function (
   if (!(await radio.count())) {
     throw friendly(
       `The Date Published filter offers no "${label}" option.`,
-      'The recipe ships "- Any -", "Past 24 Hours", "Past Week", "Past Month" and "Past Year".'
+      'Varbase Starter offers "Any time", "Past 24 hours", "Past week", "Past month" and "Past year".'
     );
   }
   const before = this.page.url();
@@ -363,11 +367,11 @@ When(/^(?:I |we )*choose the "([^"]*)" Date Published filter$/, async function (
 /**
  * Assert which Date Published option is currently chosen.
  *
- * Example #1: Then the "Past Year" Date Published filter should be chosen
- * Example #2: And the "- Any -" Date Published filter should be chosen
- * Example #3: Then the "Past Month" Date Published filter should be chosen
- * Example #4: And the "Past Week" Date Published filter should be chosen
- * Example #5: Then the "Past 24 Hours" Date Published filter should be chosen
+ * Example #1: Then the "Past year" Date Published filter should be chosen
+ * Example #2: And the "Any time" Date Published filter should be chosen
+ * Example #3: Then the "Past month" Date Published filter should be chosen
+ * Example #4: And the "Past week" Date Published filter should be chosen
+ * Example #5: Then the "Past 24 hours" Date Published filter should be chosen
  */
 Then(/^the "([^"]*)" Date Published filter should be chosen$/, async function (label) {
   const form = await requireLocator(

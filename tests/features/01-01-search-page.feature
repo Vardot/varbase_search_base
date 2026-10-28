@@ -21,12 +21,12 @@ Feature: Search Base - The search page
       And wait
      Then I see visible search keywords
       And I see visible search date form
-      And I should see "- Any -"
-      And I should see "Past 24 Hours"
-      And I should see "Past Week"
-      And I should see "Past Month"
-      And I should see "Past Year"
-      And the "- Any -" Date Published filter should be chosen
+      And I should see "Any time"
+      And I should see "Past 24 hours"
+      And I should see "Past week"
+      And I should see "Past month"
+      And I should see "Past year"
+      And the "Any time" Date Published filter should be chosen
 
   @check @local @development @staging @production
   Scenario: The search page lists nothing and faces nothing until a keyword is given

@@ -31,6 +31,7 @@ variables:
   # git.drupalcode.org clones can be slow from a runner; give composer git
   # operations room instead of the 300s default so a slow fetch is not a failure.
   COMPOSER_PROCESS_TIMEOUT: "1800"
+  DRUPAL_CMS_TELEMETRY: "0"
 
 workflow:
   rules:
@@ -197,6 +198,8 @@ recipe:
     - |
       required=0
       for i in 1 2 3 4 5; do
+        # varbase_project already ships a released copy here; the path repo cannot replace it in place.
+        rm -rf recipes/varbase_search_base
         composer require "drupal/varbase_search_base:@dev" drush/drush:^13 -W --no-interaction --ignore-platform-req=ext-pgsql && { required=1; break; }
         echo "composer require attempt $i failed — retrying in 15s"; sleep 15
       done
