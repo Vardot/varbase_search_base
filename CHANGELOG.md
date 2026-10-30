@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-10-29
+### Changed
+- Disable Drupal CMS telemetry in CI, and keep the CI recipe require working by removing the copy of the recipe that Varbase Project already ships ([#3633841](https://www.drupal.org/i/3633841)).
+- Update the search tests to the Varbase Starter wording: Any time, Past 24 hours, Past week, Past month, Past year, and No results match your search. Open a result by its row when a card link is named by more than its title ([#3633841](https://www.drupal.org/i/3633841)).
+
 ## [1.0.5] - 2026-10-18
 ### Changed
 - The Content Type facet shows its first 8 items, with Show more and Show less
@@ -68,7 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporarily remove Ultimate Cron until it has a stable release
   ([#3621494](https://www.drupal.org/i/3621494)).
 
-[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.5...1.0.x
+[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.6...1.0.x
+[1.0.6]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.5...1.0.6
 [1.0.5]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.4...1.0.5
 [1.0.4]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.3...1.0.4
 [1.0.3]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.2...1.0.3
