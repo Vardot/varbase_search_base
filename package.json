@@ -4,7 +4,7 @@
   "license": "GPL-2.0-or-later",
   "private": true,
   "engines": {
-    "node": ">= 22.0"
+    "node": ">= 24.0"
   },
   "scripts": {
     "test": "node ./node_modules/@cucumber/cucumber/bin/cucumber.js --config cucumber.js",

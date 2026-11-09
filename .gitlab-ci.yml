@@ -25,7 +25,7 @@ stages:
   - test
 
 variables:
-  DRUPAL_CORE: "11.4.0"
+  DRUPAL_CORE: "11.4.11"
   COMPOSER_ALLOW_SUPERUSER: "1"
   COMPOSER_MEMORY_LIMIT: "-1"
   # git.drupalcode.org clones can be slow from a runner; give composer git
@@ -166,7 +166,7 @@ recipe:
     - cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
     - echo "memory_limit=-1" > /usr/local/etc/php/conf.d/zz-memory.ini
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-    - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+    - curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
     - apt-get install -y nodejs
     # Make git clones resilient to a flaky runner network (RPC/stream resets).
     - git config --global http.version HTTP/1.1
