@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-11-12
+### Changed
+- Update Node.js to `>= 24.0` in `package.json` and the GitLab CI, and run CI
+  on Drupal core 11.4.11 ([#3635667](https://www.drupal.org/i/3635667)).
+
 ## [1.0.6] - 2026-10-29
 ### Changed
 - Disable Drupal CMS telemetry in CI, and keep the CI recipe require working by removing the copy of the recipe that Varbase Project already ships ([#3633841](https://www.drupal.org/i/3633841)).
@@ -73,7 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporarily remove Ultimate Cron until it has a stable release
   ([#3621494](https://www.drupal.org/i/3621494)).
 
-[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.6...1.0.x
+[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.7...1.0.x
+[1.0.7]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.6...1.0.7
 [1.0.6]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.5...1.0.6
 [1.0.5]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.4...1.0.5
 [1.0.4]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.3...1.0.4
