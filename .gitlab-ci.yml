@@ -111,11 +111,11 @@ recipe:
 #          index -> test).
 "🧪 Automated Functional Testing":
   stage: test
-  # Apache + mod_php (not php:8.4-cli): the PHP built-in server that `drush
+  # Apache + mod_php (not php:8.5-cli): the PHP built-in server that `drush
   # runserver` uses truncates large streamed responses (ERR_CONTENT_LENGTH_
   # MISMATCH), which corrupts the CKEditor 5 bundle and the media-library AJAX.
   # A real webserver serves them intact.
-  image: php:8.4-apache
+  image: php:8.5-apache
   services:
     - name: mariadb:11
       alias: database
@@ -148,7 +148,7 @@ recipe:
     - apt-get install -y --no-install-recommends git unzip curl jq default-mysql-client imagemagick librsvg2-bin
         libzip-dev libpng-dev libjpeg-dev libwebp-dev libfreetype6-dev libonig-dev
     - docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype
-    - docker-php-ext-install -j"$(nproc)" gd pdo_mysql zip opcache pcntl
+    - docker-php-ext-install -j"$(nproc)" gd mysqli pdo_mysql zip pcntl
     # Run PHP the way a served site runs it: php.ini-production, which sets
     # zend.assertions=-1. The image ships no php.ini at all, which leaves
     # assertions ON — and Drupal validates Single Directory Component props
