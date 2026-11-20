@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Run the functional tests on one copy of Cucumber: require `@cucumber/cucumber`
+  `^12.9.0`, the range `@vardot/varbase-e2e` 2.0.8 uses, and update
+  `@vardot/varbase-e2e` to `^2.0.8`. npm installed a second, newer Cucumber for
+  `@cucumber/pretty-formatter`, so the suite stopped before the first step
+  ([#3638953](https://git.drupalcode.org/project/varbase_search_base/-/work_items/3638953)).
 
 ## [1.0.7] - 2026-11-12
 ### Changed
