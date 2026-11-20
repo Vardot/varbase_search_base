@@ -43,3 +43,11 @@ Feature: Search Base - The search page
       And wait
      Then the response status code should be 200
       And the response should contain "Search result"
+
+  @check @local @development @staging @production
+  Scenario: The status report does not ask to uninstall the core Search module
+    Given I am a logged in user with the "webmaster" user
+     When I go to "/admin/reports/status"
+      And wait
+     Then the response status code should be 200
+      And I should not see "The default Drupal core Search module is still enabled"

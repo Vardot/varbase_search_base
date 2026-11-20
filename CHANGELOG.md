@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Removed
+- Stop installing the core Search module beside Search API, with the
+  `search content` grants that came with it: nothing used it, and it left the
+  Tools menu "Search" link pointing at the missing `search.view` route
+  ([#3638952](https://git.drupalcode.org/project/varbase_search_base/-/work_items/3638952)).
+
 ### Fixed
 - Run the functional tests on one copy of Cucumber: require `@cucumber/cucumber`
   `^12.9.0`, the range `@vardot/varbase-e2e` 2.0.8 uses, and update

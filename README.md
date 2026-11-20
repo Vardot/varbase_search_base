@@ -3,7 +3,6 @@
 A recipe to manage default installed modules, configs and permissions for Varbase search functionality using Search API.
 
 This recipe provides a complete search setup including:
-- Core Drupal search functionality
 - Search API for advanced search capabilities
 - Database-based search server configuration
 
@@ -21,9 +20,9 @@ This recipe provides a complete search setup including:
 
 ## Permissions
 
-The recipe configures search permissions for the following roles:
-- **Anonymous**: Basic search content access
-- **Authenticated**: Basic search content access
+The recipe grants no permissions of its own. Search runs on Search API, so
+anyone who can view published content (the `access content` permission) can
+search. The core Search module is not installed: Search API replaces it.
 
 ## Installation
 

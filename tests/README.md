@@ -12,7 +12,7 @@ filter, the results pager, and who is allowed to search.
 ```
 tests/
 ├── features/                                 # flat — one recipe, no per-feature subfolders
-│   ├── 01-01-search-page.feature                # the page, its parts, and the Search result view mode
+│   ├── 01-01-search-page.feature                # the page, its parts, the Search result view mode, no core Search
 │   ├── 02-01-search-by-keyword.feature          # the keyword bar, the empty result, the pager
 │   ├── 03-01-content-type-facet.feature         # the facet's options, counts and narrowing
 │   ├── 04-01-date-published-filter.feature      # the Date Published groups and the facet counts under them

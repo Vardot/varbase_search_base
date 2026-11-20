@@ -4,7 +4,6 @@ type: Varbase Search
 recipes:
   - drupal_cms_search
 install:
-  - search
   - search_api
   - search_api_db
   - facets
@@ -12,18 +11,11 @@ install:
 config:
   strict: false
   import:
-    search: '*'
     search_api: '*'
     search_api_db: '*'
     facets: '*'
     better_exposed_filters: '*'
   actions:
-    user.role.anonymous:
-      grantPermissions:
-        - 'search content'
-    user.role.authenticated:
-      grantPermissions:
-        - 'search content'
     # The search results page is a Drupal Canvas page (see content/canvas_page),
     # so this view supplies blocks rather than a page:
     #  - results_block  the results listing, plus the keyword form above them
