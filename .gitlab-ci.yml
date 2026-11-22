@@ -187,7 +187,11 @@ recipe:
     - cd "$SITE_DIR"
     - composer config allow-plugins true -n
     - composer config minimum-stability dev
-    - composer config repositories.search_base path "$CI_PROJECT_DIR"
+    # Install the checkout as 1.0.x-dev whatever `version` composer.json carries:
+    # varbase_starter 1.0.x-dev requires this recipe at 1.0.x-dev, so on a release
+    # branch or tag (version 1.0.8 and so on) the require cannot resolve otherwise.
+    - |
+      composer config repositories.search_base '{"type": "path", "url": "'"$CI_PROJECT_DIR"'", "options": {"versions": {"drupal/varbase_search_base": "1.0.x-dev"}}}'
     # Retry the require — git.drupalcode.org clones intermittently reset (RPC
     # failed / stream not closed) on a runner, and a single hiccup should not
     # fail the build; five failures do fail it, rather than being swallowed.
