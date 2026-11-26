@@ -13,7 +13,7 @@ min_count: 1
 missing: false
 missing_label: others
 url_alias: content_type
-facet_source_id: search_api:views_block__search__results_block
+facet_source_id: ''
 field_identifier: type
 query_operator: or
 hard_limit: null

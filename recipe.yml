@@ -197,6 +197,15 @@ config:
           dependencies:
             module:
               - node
+    # The facet ships with no source and gets it here, after the
+    # views.view.search action above has added results_block. Shipped with its
+    # source, the facet is evaluated by that view save before the display
+    # exists and Facets logs "had no source". Created here instead, Facets
+    # re-saves the view at once and caches the index fields before the site
+    # templates add theirs. Updating an existing facet does neither.
+    facets.facet.search_content_type:
+      setProperties:
+        facet_source_id: 'search_api:views_block__search__results_block'
     canvas.component.block.facet_block.search_content_type:
       createIfNotExists:
         status: true
