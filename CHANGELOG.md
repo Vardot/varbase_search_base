@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-11-26
+### Fixed
+- Install logs a warning: the Content Type facet is saved before its search results display exists ([#3638958](https://git.drupalcode.org/project/varbase_search_base/-/work_items/3638958)).
+
 ## [1.0.9] - 2026-11-25
 ### Changed
 - Use caret constraints and allow Drupal 11.4 and later and Drupal 12 in Varbase Search Base recipe ([#3638956](https://git.drupalcode.org/project/varbase_search_base/-/work_items/3638956)).
@@ -96,7 +100,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temporarily remove Ultimate Cron until it has a stable release
   ([#3621494](https://www.drupal.org/i/3621494)).
 
-[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.9...1.0.x
+[Unreleased]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.10...1.0.x
+[1.0.10]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.9...1.0.10
 [1.0.9]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.8...1.0.9
 [1.0.8]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.7...1.0.8
 [1.0.7]: https://git.drupalcode.org/project/varbase_search_base/-/compare/1.0.6...1.0.7
